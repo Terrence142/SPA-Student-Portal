@@ -118,6 +118,18 @@ export default function StaffDashboard() {
     setActiveView(view);
   };
 
+  // Helper to flip "Lastname, Firstname Middle" to "Firstname Middle Lastname"
+  const formatName = (rawName?: string) => {
+    if (!rawName) return '';
+    if (rawName.includes(',')) {
+      const parts = rawName.split(',');
+      if (parts.length >= 2) {
+        return `${parts[1].trim()} ${parts[0].trim()}`;
+      }
+    }
+    return rawName;
+  };
+
   const handleLogout = async () => {
     const { value: typed } = await Swal.fire({
       title: 'Sign Out',
@@ -164,7 +176,7 @@ export default function StaffDashboard() {
       title: 'Student Profile',
       html: `
         <div style="text-align: left; padding: 10px;">
-          <p><strong>Name:</strong> ${user.name || 'Not Set'}</p>
+          <p><strong>Name:</strong> ${formatName(user.name) || 'Not Set'}</p>
           <p><strong>Student ID:</strong> ${user.student_id}</p>
           <p><strong>LRN:</strong> ${user.lrn || 'Not Set'}</p>
           <p><strong>Date of Birth:</strong> ${user.dob ? new Date(user.dob).toLocaleDateString() : 'Not Set'}</p>
@@ -545,7 +557,7 @@ export default function StaffDashboard() {
                     {users.map((user: any) => (
                       <tr key={user.student_id} id={`row-${user.student_id}`} className="border-b border-gray-100 dark:border-gray-800 hover:bg-gray-50 dark:hover:bg-gray-800/30 transition-colors">
                         <td className="p-3 font-medium">{user.student_id}</td>
-                        <td className="p-3 text-gray-600 dark:text-gray-400 font-medium">{user.name || <i className="opacity-50">Not set</i>}</td>
+                        <td className="p-3 text-gray-600 dark:text-gray-400 font-medium">{formatName(user.name) || <i className="opacity-50">Not set</i>}</td>
                         <td className="p-3 font-bold text-gray-800 dark:text-gray-200">
                           ₱{user.balance || 0}
                         </td>

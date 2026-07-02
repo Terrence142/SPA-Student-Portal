@@ -59,6 +59,18 @@ export default function StudentDashboard() {
     }
   }, [router]);
 
+  // Helper to flip "Lastname, Firstname Middle" to "Firstname Middle Lastname"
+  const formatName = (rawName?: string) => {
+    if (!rawName) return 'Student';
+    if (rawName.includes(',')) {
+      const parts = rawName.split(',');
+      if (parts.length >= 2) {
+        return `${parts[1].trim()} ${parts[0].trim()}`;
+      }
+    }
+    return rawName;
+  };
+
   const handleLogout = async () => {
     const { value: typed } = await Swal.fire({
       title: 'Sign Out',
@@ -190,7 +202,7 @@ export default function StudentDashboard() {
           {activeTab === 'dashboard' && (
             <div className="animate-fade-in-up">
               <p className="text-gray-200 mb-8 text-lg">
-                Welcome back, <span className="font-semibold text-white">{currentUser.name || 'Student'}</span>! Check your progress and latest updates here.
+                Welcome back, <span className="font-semibold text-white">{formatName(currentUser.name)}</span>! Check your progress and latest updates here.
               </p>
 
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
@@ -250,7 +262,7 @@ export default function StudentDashboard() {
                   <div className="w-20 h-20 bg-green-500/20 rounded-full flex items-center justify-center mb-4 border border-green-500/30">
                     <GraduationCap size={40} className="text-green-400" />
                   </div>
-                  <h2 className="text-2xl font-bold mb-1 capitalize">{studentProfile.name || 'Not provided'}</h2>
+                  <h2 className="text-2xl font-bold mb-1">{formatName(studentProfile.name)}</h2>
                   <p className="text-green-300 font-medium mb-4">{studentProfile.student_id}</p>
                   
                   <div className="space-y-3 text-sm">
