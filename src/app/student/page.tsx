@@ -59,6 +59,27 @@ export default function StudentDashboard() {
     }
   }, [router]);
 
+  useEffect(() => {
+    const handlePopState = (event: PopStateEvent) => {
+      if (event.state && event.state.tab) {
+        setActiveTab(event.state.tab);
+      } else {
+        setActiveTab('dashboard');
+      }
+    };
+    
+    // Initialize initial state if not present
+    window.history.replaceState({ tab: 'dashboard' }, '', '');
+    
+    window.addEventListener('popstate', handlePopState);
+    return () => window.removeEventListener('popstate', handlePopState);
+  }, []);
+
+  const changeTab = (tab: string) => {
+    window.history.pushState({ tab }, '', `#${tab}`);
+    setActiveTab(tab);
+  };
+
   // Helper to flip "Lastname, Firstname Middle" to "Firstname Middle Lastname"
   const formatName = (rawName?: string) => {
     if (!rawName) return 'Student';
@@ -207,7 +228,7 @@ export default function StudentDashboard() {
 
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
                 <div 
-                  onClick={() => setActiveTab('profile')}
+                  onClick={() => changeTab('profile')}
                   className="bg-white/10 hover:bg-white/20 border border-white/20 p-6 rounded-xl shadow-md cursor-pointer hover:-translate-y-1 transition-all group text-center"
                 >
                   <IdCard size={40} className="text-green-400 mx-auto mb-4 group-hover:scale-110 transition-transform" />
@@ -216,7 +237,7 @@ export default function StudentDashboard() {
                 </div>
                 
                 <div 
-                  onClick={() => setActiveTab('schedule')}
+                  onClick={() => changeTab('schedule')}
                   className="bg-white/10 hover:bg-white/20 border border-white/20 p-6 rounded-xl shadow-md cursor-pointer hover:-translate-y-1 transition-all group text-center"
                 >
                   <CalendarDays size={40} className="text-green-400 mx-auto mb-4 group-hover:scale-110 transition-transform" />
@@ -225,7 +246,7 @@ export default function StudentDashboard() {
                 </div>
                 
                 <div 
-                  onClick={() => setActiveTab('announcements')}
+                  onClick={() => changeTab('announcements')}
                   className="bg-white/10 hover:bg-white/20 border border-white/20 p-6 rounded-xl shadow-md cursor-pointer hover:-translate-y-1 transition-all group text-center"
                 >
                   <Bell size={40} className="text-green-400 mx-auto mb-4 group-hover:scale-110 transition-transform" />
@@ -234,7 +255,7 @@ export default function StudentDashboard() {
                 </div>
                 
                 <div 
-                  onClick={() => setActiveTab('documents')}
+                  onClick={() => changeTab('documents')}
                   className="bg-white/10 hover:bg-white/20 border border-white/20 p-6 rounded-xl shadow-md cursor-pointer hover:-translate-y-1 transition-all group text-center"
                 >
                   <FileText size={40} className="text-green-400 mx-auto mb-4 group-hover:scale-110 transition-transform" />
@@ -249,10 +270,9 @@ export default function StudentDashboard() {
           {activeTab === 'profile' && (
             <div className="animate-fade-in-up">
               <button 
-                onClick={() => setActiveTab('dashboard')}
-                className="text-gray-300 hover:text-white font-medium mb-6 flex items-center transition-colors text-sm"
-              >
-                <ArrowLeft size={16} className="mr-2" /> Back to Dashboard
+                onClick={() => changeTab('dashboard')}
+                className="text-gray-300 hover:text-white font-medium mb-6 flex items-center transition-colors text-sm bg-white/10 hover:bg-white/20 px-3 py-1.5 rounded-lg border border-white/10"
+              >  <ArrowLeft size={16} className="mr-2" /> Back to Dashboard
               </button>
               
               <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
@@ -339,14 +359,13 @@ export default function StudentDashboard() {
             </div>
           )}
 
-          {/* ANNOUNCEMENTS TAB */}
+          {/* ANNOUNCEMENTS */}
           {activeTab === 'announcements' && (
             <div className="animate-fade-in-up">
               <button 
-                onClick={() => setActiveTab('dashboard')}
-                className="text-gray-300 hover:text-white font-medium mb-6 flex items-center transition-colors text-sm"
-              >
-                <ArrowLeft size={16} className="mr-2" /> Back to Dashboard
+                onClick={() => changeTab('dashboard')}
+                className="text-gray-300 hover:text-white font-medium mb-6 flex items-center transition-colors text-sm bg-white/10 hover:bg-white/20 px-3 py-1.5 rounded-lg border border-white/10"
+              >  <ArrowLeft size={16} className="mr-2" /> Back to Dashboard
               </button>
               
               <h2 className="text-2xl font-bold mb-6 flex items-center border-b border-white/20 pb-4">
@@ -387,14 +406,13 @@ export default function StudentDashboard() {
             </div>
           )}
 
-          {/* DOCUMENTS TAB */}
+          {/* DOCUMENTS */}
           {activeTab === 'documents' && (
             <div className="animate-fade-in-up">
               <button 
-                onClick={() => setActiveTab('dashboard')}
-                className="text-gray-300 hover:text-white font-medium mb-6 flex items-center transition-colors text-sm"
-              >
-                <ArrowLeft size={16} className="mr-2" /> Back to Dashboard
+                onClick={() => changeTab('dashboard')}
+                className="text-gray-300 hover:text-white font-medium mb-6 flex items-center transition-colors text-sm bg-white/10 hover:bg-white/20 px-3 py-1.5 rounded-lg border border-white/10"
+              >  <ArrowLeft size={16} className="mr-2" /> Back to Dashboard
               </button>
               
               <h2 className="text-2xl font-bold mb-6 flex items-center border-b border-white/20 pb-4">
@@ -420,14 +438,13 @@ export default function StudentDashboard() {
             </div>
           )}
 
-          {/* SCHEDULE TAB */}
+          {/* SCHEDULE */}
           {activeTab === 'schedule' && (
             <div className="animate-fade-in-up">
               <button 
-                onClick={() => setActiveTab('dashboard')}
-                className="text-gray-300 hover:text-white font-medium mb-6 flex items-center transition-colors text-sm"
-              >
-                <ArrowLeft size={16} className="mr-2" /> Back to Dashboard
+                onClick={() => changeTab('dashboard')}
+                className="text-gray-300 hover:text-white font-medium mb-6 flex items-center transition-colors text-sm bg-white/10 hover:bg-white/20 px-3 py-1.5 rounded-lg border border-white/10"
+              >  <ArrowLeft size={16} className="mr-2" /> Back to Dashboard
               </button>
               
               <h2 className="text-2xl font-bold mb-6 flex items-center border-b border-white/20 pb-4">
