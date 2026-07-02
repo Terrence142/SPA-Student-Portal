@@ -59,9 +59,45 @@ export default function StudentDashboard() {
     }
   }, [router]);
 
-  const handleLogout = () => {
-    localStorage.removeItem('currentUser');
-    router.push('/');
+  const handleLogout = async () => {
+    const { value: typed } = await Swal.fire({
+      title: 'Sign Out',
+      html: `
+        <div class="aws-warning-banner">
+          <span class="aws-warning-icon">⚠️</span>
+          <p>You are about to <strong>end your session</strong>. Any unsaved changes will be lost.</p>
+        </div>
+        <div class="aws-confirm-input-group">
+          <span class="aws-confirm-label">To confirm, type <code>logout</code> below:</span>
+          <input id="aws-confirm-field" class="aws-confirm-input" placeholder="Type logout" autocomplete="off" />
+        </div>
+      `,
+      customClass: { popup: 'aws-confirm-popup' },
+      showCancelButton: true,
+      confirmButtonText: 'Sign Out',
+      confirmButtonColor: '#dc2626',
+      cancelButtonText: 'Cancel',
+      focusConfirm: false,
+      didOpen: () => {
+        const input = document.getElementById('aws-confirm-field') as HTMLInputElement;
+        const btn = Swal.getConfirmButton();
+        if (btn) btn.disabled = true;
+        input?.addEventListener('input', () => {
+          const match = input.value.trim().toLowerCase() === 'logout';
+          input.className = 'aws-confirm-input' + (match ? ' matched' : (input.value.length > 0 ? ' error' : ''));
+          if (btn) btn.disabled = !match;
+        });
+        input?.focus();
+      },
+      preConfirm: () => {
+        const input = document.getElementById('aws-confirm-field') as HTMLInputElement;
+        return input?.value?.trim().toLowerCase();
+      }
+    });
+    if (typed === 'logout') {
+      localStorage.removeItem('currentUser');
+      router.push('/');
+    }
   };
 
   const handleEditContact = async () => {

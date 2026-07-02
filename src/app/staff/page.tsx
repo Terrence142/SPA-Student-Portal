@@ -118,9 +118,45 @@ export default function StaffDashboard() {
     setActiveView(view);
   };
 
-  const handleLogout = () => {
-    localStorage.removeItem('currentUser');
-    router.push('/');
+  const handleLogout = async () => {
+    const { value: typed } = await Swal.fire({
+      title: 'Sign Out',
+      html: `
+        <div class="aws-warning-banner">
+          <span class="aws-warning-icon">⚠️</span>
+          <p>You are about to <strong>end your session</strong>. Any unsaved changes will be lost.</p>
+        </div>
+        <div class="aws-confirm-input-group">
+          <span class="aws-confirm-label">To confirm, type <code>logout</code> below:</span>
+          <input id="aws-confirm-field" class="aws-confirm-input" placeholder="Type logout" autocomplete="off" />
+        </div>
+      `,
+      customClass: { popup: 'aws-confirm-popup' },
+      showCancelButton: true,
+      confirmButtonText: 'Sign Out',
+      confirmButtonColor: '#dc2626',
+      cancelButtonText: 'Cancel',
+      focusConfirm: false,
+      didOpen: () => {
+        const input = document.getElementById('aws-confirm-field') as HTMLInputElement;
+        const btn = Swal.getConfirmButton();
+        if (btn) btn.disabled = true;
+        input?.addEventListener('input', () => {
+          const match = input.value.trim().toLowerCase() === 'logout';
+          input.className = 'aws-confirm-input' + (match ? ' matched' : (input.value.length > 0 ? ' error' : ''));
+          if (btn) btn.disabled = !match;
+        });
+        input?.focus();
+      },
+      preConfirm: () => {
+        const input = document.getElementById('aws-confirm-field') as HTMLInputElement;
+        return input?.value?.trim().toLowerCase();
+      }
+    });
+    if (typed === 'logout') {
+      localStorage.removeItem('currentUser');
+      router.push('/');
+    }
   };
 
   const viewProfile = (user: any) => {
@@ -178,6 +214,60 @@ export default function StaffDashboard() {
     const statusSelect = row?.querySelector('.status-select') as HTMLSelectElement;
     const newStatus = statusSelect ? statusSelect.value : currentStatus;
 
+    // AWS-style confirmation: type the student ID to confirm
+    const { value: confirmedId } = await Swal.fire({
+      title: 'Confirm Transaction',
+      html: `
+        <div class="aws-danger-banner">
+          <span class="aws-warning-icon">🔴</span>
+          <p>You are about to modify the financial record for student <span class="aws-resource-tag">${targetId}</span>.</p>
+        </div>
+        <div class="aws-checkbox-group">
+          <div class="aws-checkbox-item">
+            <input type="checkbox" id="aws-cb-1" />
+            <label for="aws-cb-1">I understand this will change the balance from <strong>₱${currentBalance}</strong> to <strong>₱${newBalance}</strong></label>
+          </div>
+          <div class="aws-checkbox-item">
+            <input type="checkbox" id="aws-cb-2" />
+            <label for="aws-cb-2">I acknowledge this transaction (<strong>₱${amount}</strong> — ${description}) will be permanently logged</label>
+          </div>
+        </div>
+        <div class="aws-confirm-input-group">
+          <span class="aws-confirm-label">To confirm, type the student ID <code>${targetId}</code>:</span>
+          <input id="aws-confirm-field" class="aws-confirm-input" placeholder="Type student ID" autocomplete="off" />
+        </div>
+      `,
+      customClass: { popup: 'aws-confirm-popup' },
+      showCancelButton: true,
+      confirmButtonText: 'Execute Transaction',
+      confirmButtonColor: '#dc2626',
+      cancelButtonText: 'Cancel',
+      focusConfirm: false,
+      didOpen: () => {
+        const input = document.getElementById('aws-confirm-field') as HTMLInputElement;
+        const btn = Swal.getConfirmButton();
+        const cb1 = document.getElementById('aws-cb-1') as HTMLInputElement;
+        const cb2 = document.getElementById('aws-cb-2') as HTMLInputElement;
+        if (btn) btn.disabled = true;
+        const checkAll = () => {
+          const match = input?.value?.trim() === targetId;
+          const allChecked = cb1?.checked && cb2?.checked;
+          input.className = 'aws-confirm-input' + (match ? ' matched' : (input.value.length > 0 ? ' error' : ''));
+          if (btn) btn.disabled = !(match && allChecked);
+        };
+        input?.addEventListener('input', checkAll);
+        cb1?.addEventListener('change', checkAll);
+        cb2?.addEventListener('change', checkAll);
+        input?.focus();
+      },
+      preConfirm: () => {
+        const input = document.getElementById('aws-confirm-field') as HTMLInputElement;
+        return input?.value?.trim();
+      }
+    });
+
+    if (confirmedId !== targetId) return;
+
     try {
       Swal.fire({ title: 'Processing...', allowOutsideClick: false, didOpen: () => Swal.showLoading() });
       
@@ -224,6 +314,60 @@ export default function StaffDashboard() {
       Swal.fire('Warning', 'Please enter a message.', 'warning');
       return;
     }
+
+    // AWS-style: consequence checkbox + type POST to confirm
+    const { value: confirmed } = await Swal.fire({
+      title: 'Broadcast Announcement',
+      html: `
+        <div class="aws-warning-banner">
+          <span class="aws-warning-icon">📢</span>
+          <p>This announcement will be <strong>immediately visible</strong> to all students and an <strong>email blast</strong> will be sent.</p>
+        </div>
+        <div class="aws-checkbox-group">
+          <div class="aws-checkbox-item">
+            <input type="checkbox" id="aws-cb-ann-1" />
+            <label for="aws-cb-ann-1">I have reviewed the announcement content for accuracy</label>
+          </div>
+          <div class="aws-checkbox-item">
+            <input type="checkbox" id="aws-cb-ann-2" />
+            <label for="aws-cb-ann-2">I understand all students will receive an email notification</label>
+          </div>
+        </div>
+        <div class="aws-confirm-input-group">
+          <span class="aws-confirm-label">To confirm, type <code>post</code> below:</span>
+          <input id="aws-confirm-field" class="aws-confirm-input" placeholder="Type post" autocomplete="off" />
+        </div>
+      `,
+      customClass: { popup: 'aws-confirm-popup' },
+      showCancelButton: true,
+      confirmButtonText: 'Broadcast Now',
+      confirmButtonColor: '#16a34a',
+      cancelButtonText: 'Cancel',
+      focusConfirm: false,
+      didOpen: () => {
+        const input = document.getElementById('aws-confirm-field') as HTMLInputElement;
+        const btn = Swal.getConfirmButton();
+        const cb1 = document.getElementById('aws-cb-ann-1') as HTMLInputElement;
+        const cb2 = document.getElementById('aws-cb-ann-2') as HTMLInputElement;
+        if (btn) btn.disabled = true;
+        const checkAll = () => {
+          const match = input?.value?.trim().toLowerCase() === 'post';
+          const allChecked = cb1?.checked && cb2?.checked;
+          input.className = 'aws-confirm-input' + (match ? ' matched' : (input.value.length > 0 ? ' error' : ''));
+          if (btn) btn.disabled = !(match && allChecked);
+        };
+        input?.addEventListener('input', checkAll);
+        cb1?.addEventListener('change', checkAll);
+        cb2?.addEventListener('change', checkAll);
+        input?.focus();
+      },
+      preConfirm: () => {
+        const input = document.getElementById('aws-confirm-field') as HTMLInputElement;
+        return input?.value?.trim().toLowerCase();
+      }
+    });
+
+    if (confirmed !== 'post') return;
 
     setIsPosting(true);
     setPostStatus('');
