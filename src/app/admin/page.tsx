@@ -53,6 +53,13 @@ export default function AdminDashboard() {
   );
   const announcements = announcementsData || [];
 
+  const { data: logsData } = useSWR(
+    (currentUser && activeView === 'logs') ? [GOOGLE_SCRIPT_URL, 'fetch_admin_logs', currentUser.role] : null,
+    ([url, action, role]) => fetcher(url, action, role),
+    { revalidateOnFocus: false }
+  );
+  const logs = logsData || [];
+
   const rawUsers = usersData ? usersData.filter((u: any) => u.student_id && u.role !== 'admin' && u.role !== 'staff') : [];
   
   const users = rawUsers.filter((u: any) => {
@@ -326,6 +333,62 @@ export default function AdminDashboard() {
     }
   };
 
+  const handleDirectEdit = async (user: any) => {
+    const { value: formValues } = await Swal.fire({
+      title: `Edit Record`,
+      html: `
+        <div class="mb-4 text-left text-sm text-gray-500 dark:text-gray-400">
+          Directly editing record for <strong>${user.student_id}</strong>
+        </div>
+        <div class="mb-4 text-left">
+          <label class="block mb-1 text-sm font-medium">Exact Balance (₱)</label>
+          <input id="swal-edit-balance" type="number" class="w-full bg-white dark:bg-[#1e293b] border border-gray-300 dark:border-gray-600 rounded px-3 py-2 text-black dark:text-white outline-none focus:border-blue-500" value="${user.balance || 0}" />
+        </div>
+        <div class="mb-2 text-left">
+          <label class="block mb-1 text-sm font-medium">Status</label>
+          <select id="swal-edit-status" class="w-full bg-white dark:bg-[#1e293b] border border-gray-300 dark:border-gray-600 rounded px-3 py-2 text-black dark:text-white outline-none focus:border-blue-500">
+            <option value="Pending" ${user.status_val === 'Pending' ? 'selected' : ''}>Pending</option>
+            <option value="Paid" ${user.status_val === 'Paid' ? 'selected' : ''}>Paid</option>
+            <option value="Unpaid" ${user.status_val === 'Unpaid' ? 'selected' : ''}>Unpaid</option>
+          </select>
+        </div>
+      `,
+      focusConfirm: false,
+      showCancelButton: true,
+      confirmButtonText: 'Save Changes',
+      preConfirm: () => {
+        const bal = (document.getElementById('swal-edit-balance') as HTMLInputElement).value;
+        const stat = (document.getElementById('swal-edit-status') as HTMLSelectElement).value;
+        return { new_balance: bal, new_status: stat };
+      }
+    });
+
+    if (formValues) {
+      try {
+        const response = await fetch(GOOGLE_SCRIPT_URL, {
+          method: 'POST',
+          body: JSON.stringify({
+            action: 'edit_data',
+            role: currentUser.role,
+            author: currentUser.name || "Administrator",
+            target_id: user.student_id,
+            new_balance: formValues.new_balance,
+            new_status: formValues.new_status
+          })
+        });
+        const result = await response.json();
+        if (result.status === 'success') {
+          mutate([GOOGLE_SCRIPT_URL, 'fetch_data', currentUser.role, currentUser.student_id]);
+          Swal.fire('Saved!', 'Student record updated directly.', 'success');
+        } else {
+          Swal.fire('Error', result.message, 'error');
+        }
+      } catch (error) {
+        Swal.fire('Error', 'Network error.', 'error');
+      }
+    }
+  };
+
   const handlePostAnnouncement = async () => {
     if (!announcementMsg.trim()) {
       Swal.fire('Warning', 'Please enter a message.', 'warning');
@@ -588,16 +651,25 @@ export default function AdminDashboard() {
                         <td className="p-3">
                           <div className="flex space-x-2 justify-center">
                             <button 
-                              className="bg-gray-200 dark:bg-gray-700 hover:bg-gray-300 dark:hover:bg-gray-600 text-gray-800 dark:text-white font-medium py-1.5 px-3 rounded flex items-center transition-colors text-sm"
+                              className="bg-gray-200 dark:bg-gray-700 hover:bg-gray-300 dark:hover:bg-gray-600 text-gray-800 dark:text-white font-medium py-1.5 px-2 rounded flex items-center transition-colors text-sm"
                               onClick={() => viewProfile(user)}
+                              title="View Profile"
                             >
-                              <UserCircle size={16} className="mr-1" /> Profile
+                              <UserCircle size={16} />
                             </button>
                             <button 
-                              className="bg-blue-600 hover:bg-blue-700 text-white font-medium py-1.5 px-3 rounded flex items-center transition-colors text-sm"
-                              onClick={() => handleUpdateBalance(user.student_id, user.balance, user.status_val)}
+                              className="bg-green-600 hover:bg-green-700 text-white font-medium py-1.5 px-2 rounded flex items-center transition-colors text-sm"
+                              onClick={() => handleDirectEdit(user)}
+                              title="Direct Edit"
                             >
-                              <ReceiptText size={16} className="mr-1" /> Log Tx
+                              <Settings size={16} />
+                            </button>
+                            <button 
+                              className="bg-blue-600 hover:bg-blue-700 text-white font-medium py-1.5 px-2 rounded flex items-center transition-colors text-sm"
+                              onClick={() => handleUpdateBalance(user.student_id, user.balance, user.status_val)}
+                              title="Log Transaction"
+                            >
+                              <ReceiptText size={16} />
                             </button>
                           </div>
                         </td>
@@ -673,6 +745,44 @@ export default function AdminDashboard() {
                   ))}
                 </div>
               )}
+            </div>
+          </div>
+        )}
+
+        {/* AUDIT LOGS VIEW */}
+        {activeView === 'logs' && (
+          <div className="bg-white dark:bg-[#111] rounded-2xl shadow-sm border border-gray-200 dark:border-gray-800 p-6 sm:p-8 animate-fade-in">
+            <h2 className="text-2xl font-bold mb-6 flex items-center">
+              <ReceiptText className="mr-3 text-blue-600 dark:text-blue-400" size={28} /> Admin Activity Logs
+            </h2>
+            <div className="overflow-x-auto rounded-lg border border-gray-200 dark:border-gray-800">
+              <table className="w-full text-left border-collapse min-w-[700px]">
+                <thead>
+                  <tr className="bg-gray-50 dark:bg-gray-800/50 text-gray-700 dark:text-gray-300">
+                    <th className="p-3 font-semibold border-b dark:border-gray-800 w-[180px]">Time</th>
+                    <th className="p-3 font-semibold border-b dark:border-gray-800 w-[150px]">Admin</th>
+                    <th className="p-3 font-semibold border-b dark:border-gray-800 w-[180px]">Action</th>
+                    <th className="p-3 font-semibold border-b dark:border-gray-800">Results</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {logs.map((log: any, idx: number) => (
+                    <tr key={idx} className="border-b border-gray-100 dark:border-gray-800 hover:bg-gray-50 dark:hover:bg-gray-800/30 transition-colors text-sm">
+                      <td className="p-3 text-gray-500 dark:text-gray-400">{log.timestamp}</td>
+                      <td className="p-3 font-medium">{log.author}</td>
+                      <td className="p-3 font-medium text-blue-600 dark:text-blue-400">{log.action}</td>
+                      <td className="p-3 text-gray-600 dark:text-gray-300">{log.results}</td>
+                    </tr>
+                  ))}
+                  {logs.length === 0 && (
+                    <tr>
+                      <td colSpan={4} className="p-6 text-center text-gray-500 dark:text-gray-400">
+                        No administrative logs found.
+                      </td>
+                    </tr>
+                  )}
+                </tbody>
+              </table>
             </div>
           </div>
         )}
