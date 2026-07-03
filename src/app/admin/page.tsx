@@ -620,7 +620,8 @@ export default function AdminDashboard() {
               </div>
             ) : (
               <div className="overflow-x-auto rounded-lg border border-gray-200 dark:border-gray-800">
-                <table className="w-full text-left border-collapse min-w-[900px]">
+                {/* Desktop Table */}
+                <table className="w-full text-left border-collapse min-w-[900px] hidden md:table">
                   <thead>
                     <tr className="bg-gray-50 dark:bg-gray-800/50 text-gray-700 dark:text-gray-300">
                       <th className="p-3 font-semibold border-b dark:border-gray-800">Student ID</th>
@@ -684,6 +685,63 @@ export default function AdminDashboard() {
                     )}
                   </tbody>
                 </table>
+
+                {/* Mobile Cards */}
+                <div className="md:hidden flex flex-col space-y-4 p-2 bg-gray-50/50 dark:bg-transparent">
+                  {users.map((user: any) => (
+                    <div key={user.student_id} id={`mobile-row-${user.student_id}`} className="bg-white dark:bg-gray-800/40 border border-gray-200 dark:border-gray-700 p-4 rounded-xl shadow-sm">
+                      <div className="flex justify-between items-start mb-3">
+                        <div>
+                          <p className="font-bold text-gray-800 dark:text-gray-200 text-lg">{formatName(user.name) || <i className="opacity-50">Not set</i>}</p>
+                          <p className="text-sm text-blue-600 dark:text-blue-400 font-medium">{user.student_id}</p>
+                        </div>
+                        <div className="text-right">
+                          <p className="text-xs text-gray-500 dark:text-gray-400 mb-0.5">Balance</p>
+                          <p className="font-bold text-gray-800 dark:text-gray-200 text-lg">₱{user.balance || 0}</p>
+                        </div>
+                      </div>
+                      
+                      <div className="mb-4 bg-gray-50 dark:bg-[#0a0a0a] rounded-lg p-3 border border-gray-100 dark:border-gray-800">
+                        <label className="text-xs text-gray-500 dark:text-gray-400 block mb-1.5 font-medium">Payment Status</label>
+                        <select 
+                          className="status-select bg-white dark:bg-[#111] border border-gray-300 dark:border-gray-700 rounded-lg px-3 py-2 w-full outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 dark:text-white text-sm shadow-sm"
+                          defaultValue={user.status_val || 'Pending'}
+                        >
+                          <option className="text-black" value="Pending">Pending</option>
+                          <option className="text-black" value="Paid">Paid</option>
+                          <option className="text-black" value="Unpaid">Unpaid</option>
+                        </select>
+                      </div>
+                      
+                      <div className="grid grid-cols-3 gap-2">
+                        <button 
+                          className="bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 text-gray-800 dark:text-white font-medium py-2.5 px-2 rounded-lg flex flex-col items-center justify-center transition-colors text-xs border border-gray-200 dark:border-gray-600 shadow-sm"
+                          onClick={() => viewProfile(user)}
+                        >
+                          <UserCircle size={20} className="mb-1 text-gray-500 dark:text-gray-300" /> Profile
+                        </button>
+                        <button 
+                          className="bg-green-50 hover:bg-green-100 dark:bg-green-900/20 dark:hover:bg-green-900/40 text-green-700 dark:text-green-400 font-medium py-2.5 px-2 rounded-lg flex flex-col items-center justify-center transition-colors text-xs border border-green-200 dark:border-green-800 shadow-sm"
+                          onClick={() => handleDirectEdit(user)}
+                        >
+                          <Settings size={20} className="mb-1" /> Edit Bal
+                        </button>
+                        <button 
+                          className="bg-blue-600 hover:bg-blue-700 text-white font-medium py-2.5 px-2 rounded-lg flex flex-col items-center justify-center transition-colors text-xs shadow-sm"
+                          onClick={() => handleUpdateBalance(user.student_id, user.balance, user.status_val)}
+                        >
+                          <ReceiptText size={20} className="mb-1" /> Log Tx
+                        </button>
+                      </div>
+                    </div>
+                  ))}
+                  {users.length === 0 && (
+                    <div className="p-8 text-center text-gray-500 dark:text-gray-400 bg-white dark:bg-gray-800/40 rounded-xl border border-gray-200 dark:border-gray-700">
+                      No users found. Make sure students have valid Student IDs.
+                    </div>
+                  )}
+                </div>
+
               </div>
             )}
           </div>
@@ -756,7 +814,8 @@ export default function AdminDashboard() {
               <ReceiptText className="mr-3 text-blue-600 dark:text-blue-400" size={28} /> Admin Activity Logs
             </h2>
             <div className="overflow-x-auto rounded-lg border border-gray-200 dark:border-gray-800">
-              <table className="w-full text-left border-collapse min-w-[700px]">
+              {/* Desktop Table */}
+              <table className="w-full text-left border-collapse min-w-[700px] hidden md:table">
                 <thead>
                   <tr className="bg-gray-50 dark:bg-gray-800/50 text-gray-700 dark:text-gray-300">
                     <th className="p-3 font-semibold border-b dark:border-gray-800 w-[180px]">Time</th>
@@ -783,6 +842,27 @@ export default function AdminDashboard() {
                   )}
                 </tbody>
               </table>
+
+              {/* Mobile Cards */}
+              <div className="md:hidden flex flex-col space-y-4 p-2 bg-gray-50/50 dark:bg-transparent">
+                {logs.map((log: any, idx: number) => (
+                  <div key={idx} className="bg-white dark:bg-gray-800/40 border border-gray-200 dark:border-gray-700 p-4 rounded-xl shadow-sm">
+                    <div className="flex justify-between items-start mb-2">
+                      <span className="text-xs text-gray-500 dark:text-gray-400 bg-gray-100 dark:bg-gray-800 px-2 py-1 rounded-md">{log.timestamp}</span>
+                      <span className="text-sm font-bold text-gray-800 dark:text-gray-200">{log.author}</span>
+                    </div>
+                    <div className="mt-3 bg-blue-50/50 dark:bg-blue-900/10 border border-blue-100 dark:border-blue-900/30 rounded-lg p-3">
+                      <p className="text-sm font-semibold text-blue-700 dark:text-blue-400 mb-1">{log.action}</p>
+                      <p className="text-sm text-gray-700 dark:text-gray-300 leading-relaxed">{log.results}</p>
+                    </div>
+                  </div>
+                ))}
+                {logs.length === 0 && (
+                  <div className="p-8 text-center text-gray-500 dark:text-gray-400 bg-white dark:bg-gray-800/40 rounded-xl border border-gray-200 dark:border-gray-700">
+                    No administrative logs found.
+                  </div>
+                )}
+              </div>
             </div>
           </div>
         )}
