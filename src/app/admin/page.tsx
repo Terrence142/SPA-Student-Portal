@@ -60,6 +60,14 @@ export default function AdminDashboard() {
   );
   const logs = logsData || [];
 
+  const { data: allTransactionsData, isLoading: isLoadingAllTransactions } = useSWR(
+    (currentUser && activeView === 'transactions') ? [GOOGLE_SCRIPT_URL, 'fetch_transactions', currentUser.role] : null,
+    ([url, action, role]) => fetcher(url, action, role),
+    { revalidateOnFocus: false }
+  );
+  const allTransactions = allTransactionsData || [];
+
+
   const rawUsers = usersData ? usersData.filter((u: any) => u.student_id && u.role !== 'admin' && u.role !== 'staff') : [];
   
   const users = rawUsers.filter((u: any) => {
@@ -556,6 +564,15 @@ export default function AdminDashboard() {
               <p className="text-gray-500 dark:text-gray-400 text-sm mb-4">Configure global portal settings and maintenance.</p>
               <button className="text-gray-600 dark:text-gray-400 font-semibold text-sm group-hover:text-gray-200 transition-colors">View Settings &rarr;</button>
             </div>
+            
+            <div onClick={() => changeView('transactions')} className="bg-white dark:bg-[#111] rounded-2xl shadow-sm border border-gray-200 dark:border-gray-800 p-6 hover:shadow-md transition-shadow cursor-pointer group">
+              <div className="bg-purple-50 dark:bg-purple-900/30 w-14 h-14 rounded-xl flex items-center justify-center mb-4 text-purple-600 dark:text-purple-400">
+                <ReceiptText size={28} />
+              </div>
+              <h2 className="text-xl font-bold mb-2">Transaction Ledger</h2>
+              <p className="text-gray-500 dark:text-gray-400 text-sm mb-4">View all financial transactions and payments.</p>
+              <button className="text-purple-600 dark:text-purple-400 font-semibold text-sm group-hover:text-purple-800 transition-colors">View Ledger &rarr;</button>
+            </div>
           </div>
         )}
 
@@ -863,6 +880,84 @@ export default function AdminDashboard() {
                   </div>
                 )}
               </div>
+            </div>
+          </div>
+        )}
+
+        {/* TRANSACTIONS VIEW */}
+        {activeView === 'transactions' && (
+          <div className="bg-white dark:bg-[#111] rounded-2xl shadow-sm border border-gray-200 dark:border-gray-800 p-6 sm:p-8 animate-fade-in max-w-4xl mx-auto">
+            <button 
+              onClick={() => changeView('dashboard')}
+              className="text-gray-500 dark:text-gray-400 hover:text-gray-800 dark:hover:text-white font-medium mb-6 flex items-center transition-colors text-sm"
+            >
+              <ArrowLeft size={16} className="mr-2" /> Back to Dashboard
+            </button>
+            
+            <h2 className="text-2xl font-bold mb-2 flex items-center">
+              <ReceiptText className="mr-3 text-purple-600 dark:text-purple-400" size={28} /> Transaction Ledger
+            </h2>
+            <p className="text-gray-600 dark:text-gray-400 mb-6">A complete record of all financial transactions logged in the system.</p>
+
+            <div className="overflow-x-auto rounded-lg border border-gray-200 dark:border-gray-800">
+              {isLoadingAllTransactions ? (
+                <div className="p-10 flex justify-center text-gray-500">
+                  <div className="w-8 h-8 border-4 border-purple-500 border-t-transparent rounded-full animate-spin"></div>
+                </div>
+              ) : (
+                <>
+                  <table className="w-full text-left border-collapse min-w-[700px] hidden md:table">
+                    <thead>
+                      <tr className="bg-gray-50 dark:bg-gray-800/50 text-gray-700 dark:text-gray-300">
+                        <th className="p-3 font-semibold border-b dark:border-gray-800">Date/Time</th>
+                        <th className="p-3 font-semibold border-b dark:border-gray-800">Student ID</th>
+                        <th className="p-3 font-semibold border-b dark:border-gray-800">Amount (₱)</th>
+                        <th className="p-3 font-semibold border-b dark:border-gray-800">Description</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {allTransactions.map((tx: any, idx: number) => (
+                        <tr key={idx} className="border-b border-gray-100 dark:border-gray-800 hover:bg-gray-50 dark:hover:bg-gray-800/30 transition-colors text-sm">
+                          <td className="p-3 text-gray-500 dark:text-gray-400">{new Date(tx.date).toLocaleString()}</td>
+                          <td className="p-3 font-medium">{tx.student_id || 'Unknown'}</td>
+                          <td className={`p-3 font-bold ${tx.amount > 0 ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-400'}`}>
+                            {tx.amount > 0 ? '+' : ''}₱{tx.amount}
+                          </td>
+                          <td className="p-3 text-gray-700 dark:text-gray-300">{tx.description}</td>
+                        </tr>
+                      ))}
+                      {allTransactions.length === 0 && (
+                        <tr>
+                          <td colSpan={4} className="p-6 text-center text-gray-500 dark:text-gray-400">
+                            No transactions logged yet.
+                          </td>
+                        </tr>
+                      )}
+                    </tbody>
+                  </table>
+                  
+                  {/* Mobile View for Transactions */}
+                  <div className="md:hidden flex flex-col space-y-4 p-2 bg-gray-50/50 dark:bg-transparent">
+                    {allTransactions.map((tx: any, idx: number) => (
+                      <div key={idx} className="bg-white dark:bg-gray-800/40 border border-gray-200 dark:border-gray-700 p-4 rounded-xl shadow-sm">
+                        <div className="flex justify-between items-start mb-2">
+                          <span className="text-xs text-gray-500 dark:text-gray-400">{new Date(tx.date).toLocaleString()}</span>
+                          <span className={`text-sm font-bold ${tx.amount > 0 ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-400'}`}>
+                            {tx.amount > 0 ? '+' : ''}₱{tx.amount}
+                          </span>
+                        </div>
+                        <p className="font-semibold text-gray-800 dark:text-gray-200">{tx.student_id}</p>
+                        <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">{tx.description}</p>
+                      </div>
+                    ))}
+                    {allTransactions.length === 0 && (
+                      <div className="p-8 text-center text-gray-500 dark:text-gray-400 bg-white dark:bg-gray-800/40 rounded-xl border border-gray-200 dark:border-gray-700">
+                        No transactions found.
+                      </div>
+                    )}
+                  </div>
+                </>
+              )}
             </div>
           </div>
         )}

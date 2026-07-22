@@ -17,26 +17,9 @@ export default function LoginPage() {
   const [errorMsg, setErrorMsg] = useState('');
   const [displayName, setDisplayName] = useState('');
   const [showAbout, setShowAbout] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
 
-  // Auto-verify Student ID
-  useEffect(() => {
-    const timer = setTimeout(() => {
-      if (step === 1 && studentId.trim().length >= 4 && !isVerifying && !errorMsg) {
-        handleVerifyId();
-      }
-    }, 800);
-    return () => clearTimeout(timer);
-  }, [studentId, step]);
-
-  // Auto-verify Password
-  useEffect(() => {
-    const timer = setTimeout(() => {
-      if (step === 2 && password.trim().length >= 4 && !isVerifying) {
-        handleLogin();
-      }
-    }, 800);
-    return () => clearTimeout(timer);
-  }, [password, step]);
+  // Auto-verify has been removed as per user request to use manual login button
 
   const handleVerifyId = async (e?: React.FormEvent) => {
     if (e) e.preventDefault();
@@ -197,15 +180,24 @@ export default function LoginPage() {
                 <Lock size={20} />
               </div>
               <input
-                type="password"
+                type={showPassword ? "text" : "password"}
                 placeholder="Password"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
-                className="w-full pl-10 pr-4 py-3 bg-gray-50/50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-green-500 focus:border-green-500 transition-all outline-none text-gray-700 font-medium"
+                className="w-full pl-10 pr-12 py-3 bg-gray-50/50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-green-500 focus:border-green-500 transition-all outline-none text-gray-700 font-medium"
                 required
                 autoFocus
               />
+              <button
+                type="button"
+                onClick={() => setShowPassword(!showPassword)}
+                className="absolute inset-y-0 right-0 pr-3 flex items-center text-gray-400 hover:text-green-600 transition-colors"
+                title={showPassword ? "Hide password" : "Show password"}
+              >
+                {showPassword ? <EyeOff size={20} /> : <Eye size={20} />}
+              </button>
             </div>
+
             
             <button
               type="submit"
