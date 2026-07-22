@@ -208,8 +208,42 @@ export default function AdminDashboard() {
           <p><strong>Status:</strong> ${user.status_val || 'Pending'}</p>
         </div>
       `,
-      confirmButtonText: 'Close',
       confirmButtonColor: '#1d4ed8'
+    });
+  };
+
+  const viewLedger = (user: any) => {
+    const studentTx = allTransactions.filter((tx: any) => tx.student_id === user.student_id);
+    
+    let htmlContent = '';
+    if (studentTx.length === 0) {
+      htmlContent = '<div class="p-4 text-center text-gray-500">No transactions found for this student.</div>';
+    } else {
+      htmlContent = `
+        <div style="max-height: 300px; overflow-y: auto; text-align: left;" class="text-sm">
+          ${studentTx.map((tx: any) => `
+            <div class="border-b border-gray-200 dark:border-gray-700 py-3 flex justify-between">
+              <div>
+                <p class="font-semibold text-gray-800 dark:text-gray-200">${tx.description}</p>
+                <p class="text-xs text-gray-500">${new Date(tx.date).toLocaleString()}</p>
+              </div>
+              <div class="text-right">
+                <p class="font-bold ${tx.amount > 0 ? 'text-green-600' : 'text-red-600'}">
+                  ${tx.amount > 0 ? '+' : ''}₱${tx.amount}
+                </p>
+              </div>
+            </div>
+          `).join('')}
+        </div>
+      `;
+    }
+
+    Swal.fire({
+      title: `Ledger: ${formatName(user.name)}`,
+      html: htmlContent,
+      confirmButtonText: 'Close',
+      confirmButtonColor: '#9333ea',
+      width: '32em'
     });
   };
 
@@ -676,6 +710,13 @@ export default function AdminDashboard() {
                               <UserCircle size={16} />
                             </button>
                             <button 
+                              className="bg-purple-600 hover:bg-purple-700 text-white font-medium py-1.5 px-2 rounded flex items-center transition-colors text-sm"
+                              onClick={() => viewLedger(user)}
+                              title="View Ledger"
+                            >
+                              <ReceiptText size={16} />
+                            </button>
+                            <button 
                               className="bg-green-600 hover:bg-green-700 text-white font-medium py-1.5 px-2 rounded flex items-center transition-colors text-sm"
                               onClick={() => handleDirectEdit(user)}
                               title="Direct Edit"
@@ -730,12 +771,18 @@ export default function AdminDashboard() {
                         </select>
                       </div>
                       
-                      <div className="grid grid-cols-3 gap-2">
+                      <div className="grid grid-cols-4 gap-2">
                         <button 
                           className="bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 text-gray-800 dark:text-white font-medium py-2.5 px-2 rounded-lg flex flex-col items-center justify-center transition-colors text-xs border border-gray-200 dark:border-gray-600 shadow-sm"
                           onClick={() => viewProfile(user)}
                         >
                           <UserCircle size={20} className="mb-1 text-gray-500 dark:text-gray-300" /> Profile
+                        </button>
+                        <button 
+                          className="bg-purple-50 hover:bg-purple-100 dark:bg-purple-900/20 dark:hover:bg-purple-900/40 text-purple-700 dark:text-purple-400 font-medium py-2.5 px-2 rounded-lg flex flex-col items-center justify-center transition-colors text-xs border border-purple-200 dark:border-purple-800 shadow-sm"
+                          onClick={() => viewLedger(user)}
+                        >
+                          <ReceiptText size={20} className="mb-1" /> Ledger
                         </button>
                         <button 
                           className="bg-green-50 hover:bg-green-100 dark:bg-green-900/20 dark:hover:bg-green-900/40 text-green-700 dark:text-green-400 font-medium py-2.5 px-2 rounded-lg flex flex-col items-center justify-center transition-colors text-xs border border-green-200 dark:border-green-800 shadow-sm"
