@@ -1,4 +1,4 @@
-# SPA-Student-Portal
+﻿# SPA-Student-Portal
 
 [![Next.js](https://img.shields.io/badge/Next.js-16.2.9-black?logo=next.js)](https://nextjs.org/)
 [![React](https://img.shields.io/badge/React-19.2.4-blue?logo=react)](https://react.dev/)
@@ -25,7 +25,7 @@ The SPA-Student-Portal is a modern, responsive web application built with Next.j
 ## 🚀 Getting Started
 1. **Clone the repository**:
    ```bash
-   git clone https://github.com/Markyy0411/SPA-Student-Portal.git
+   git clone https://github.com/MarkAngelGuevarra/SPA-Student-Portal.git
    ```
 2. **Install dependencies**:
    ```bash
@@ -39,4 +39,4 @@ The SPA-Student-Portal is a modern, responsive web application built with Next.j
 
 ## 📬 Let's Connect
 *   **Email**: [marcangelguevarra@gmail.com](mailto:marcangelguevarra@gmail.com)
-*   **GitHub**: [Markyy0411](https://github.com/Markyy0411)
+*   **GitHub**: [MarkAngelGuevarra](https://github.com/MarkAngelGuevarra)
