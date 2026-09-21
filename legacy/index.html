@@ -1,0 +1,411 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Saint Patrick Academy School Portal</title>
+    <!-- FontAwesome for Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="style.css">
+    <!-- SweetAlert2 for beautiful popups -->
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    
+    <!-- Vercel Analytics -->
+    <script>
+        window.va = window.va || function () { (window.vaq = window.vaq || []).push(arguments); };
+    </script>
+    <script defer src="/_vercel/insights/script.js"></script>
+    
+    <!-- PWA Setup -->
+    <link rel="manifest" href="manifest.json">
+    <meta name="theme-color" content="#008751">
+</head>
+<body>
+    <!-- MASTER KILL SWITCH -->
+    <script>
+        // Set this to 'true' to completely lock the website until the client pays.
+        // Set it back to 'false' to instantly restore full access.
+        const PORTAL_LOCKED = false;
+
+        if (PORTAL_LOCKED) {
+            document.write(`
+                <div style="display: flex; justify-content: center; align-items: center; height: 100vh; background-color: #111; color: #fff; font-family: 'Inter', sans-serif; text-align: center; padding: 20px;">
+                    <div>
+                        <i class="fa-solid fa-triangle-exclamation" style="font-size: 50px; color: #ff4757; margin-bottom: 20px;"></i>
+                        <h1 style="font-size: 24px; margin-bottom: 10px;">Service Suspended</h1>
+                        <p style="color: #ccc; font-size: 16px;">This portal has been temporarily suspended pending payment for development services.</p>
+                        <p style="color: #777; font-size: 14px; margin-top: 20px;">Please contact the developer to restore access.</p>
+                    </div>
+                </div>
+            `);
+            document.close(); // Stops the rest of the HTML from rendering
+        }
+    </script>
+
+    <div class="BG-image fade-in"></div>
+
+    <div class="headline-container slide-down">
+        <h1>Making payment easier with School Portal</h1>
+    </div>
+
+    <div class="Logo-Holder fade-in-up">
+        <div class="Logo">
+            <img src="logo.png" alt="Saint Patrick Academy Logo">
+        </div>
+
+        <div class="Login-container" id="loginContainer">
+            <form class="Login-form" id="loginForm">
+                <h2>Student Login</h2>
+                
+                <div class="error-msg" id="errorMessage" style="display: none;">Invalid credentials</div>
+
+                <div id="step1Container">
+                    <div class="input-group">
+                        <i class="fa-solid fa-user"></i>
+                        <input type="text" id="studentId" placeholder="Student ID" required>
+                    </div>
+                    <button type="button" class="Login-button" id="nextBtn" style="margin-top: 5px;">Next</button>
+                </div>
+                
+                <div id="studentNameDisplay" style="color: #ffffff; font-weight: 500; text-align: center; margin-bottom: 15px; margin-top: 15px; display: none; font-size: 16px; letter-spacing: 0.5px;"></div>
+
+                <div id="step2Container" style="display: none; transition: all 0.5s ease;">
+                    <div class="input-group">
+                        <i class="fa-solid fa-lock"></i>
+                        <input type="password" id="password" placeholder="Password">
+                        <i class="fa-solid fa-eye toggle-password" id="togglePassword"></i>
+                    </div>
+                    
+                    <button type="submit" class="Login-button" id="signInBtn">Sign In</button>
+                    
+                    <div style="text-align: center; margin-top: 20px;">
+                        <a href="#" id="backBtn" style="color: #fff; text-decoration: none; font-size: 14px; opacity: 0.8; transition: opacity 0.3s;"><i class="fa-solid fa-arrow-left"></i> Not you? Change ID</a>
+                    </div>
+                </div>
+            </form>
+        </div>
+
+        <div class="About-container" id="aboutContainer" style="display: none;">
+            <h2>Saint Patrick's Academy</h2>
+            <div class="about-content">
+                <p><strong><i class="fa-solid fa-location-dot"></i> Location:</strong> Dingalan, Aurora</p>
+                <p><strong><i class="fa-solid fa-calendar-days"></i> Founded:</strong> 1968</p>
+                
+                <div class="about-divider"></div>
+                
+                <h3><i class="fa-solid fa-eye"></i> Vision</h3>
+                <p class="about-text">To provide holistic formation for students inspired by the Blessed Trinity and in communion with the family, church, and community.</p>
+                
+                <h3><i class="fa-solid fa-bullseye"></i> Mission</h3>
+                <p class="about-text">Following Jesus Christ through living the Carmelian spirit of prayer, compassion, and prophetic action to provide quality education for the church and society.</p>
+            </div>
+            
+            <button class="Exit-button" id="exitAboutBtn"><i class="fa-solid fa-xmark"></i> Exit About Section</button>
+        </div>
+    </div>
+
+    <div class="footer-links fade-in-up">
+        <a href="#" id="aboutSchoolBtn"><i class="fa-solid fa-circle-info"></i> About Saint Patrick's Academy</a>
+    </div>
+
+    <!-- JavaScript for Form Validation and Password Toggle -->
+    <script>
+        const togglePassword = document.getElementById('togglePassword');
+        const passwordInput = document.getElementById('password');
+
+        togglePassword.addEventListener('click', function () {
+            const type = passwordInput.getAttribute('type') === 'password' ? 'text' : 'password';
+            passwordInput.setAttribute('type', type);
+            this.classList.toggle('fa-eye');
+            this.classList.toggle('fa-eye-slash');
+        });
+
+        const url = 'https://script.google.com/macros/s/AKfycbz6cR-xROnKZME0Fu3CSxiyhYlt4gJgcxxx-Wu_DR9sT2d8H4mrPTtU4XM5GWXFjzfe/exec';
+        const loginForm = document.getElementById('loginForm');
+        const studentIdInput = document.getElementById('studentId');
+        const errorMessage = document.getElementById('errorMessage');
+        const signInBtn = document.getElementById('signInBtn');
+        const nextBtn = document.getElementById('nextBtn');
+        const studentNameDisplay = document.getElementById('studentNameDisplay');
+        const step1Container = document.getElementById('step1Container');
+        const step2Container = document.getElementById('step2Container');
+        const backBtn = document.getElementById('backBtn');
+
+        // Debounce utility function
+        function debounce(func, delay) {
+            let timeoutId;
+            return function (...args) {
+                clearTimeout(timeoutId);
+                timeoutId = setTimeout(() => {
+                    func.apply(this, args);
+                }, delay);
+            };
+        }
+
+        let isVerifying = false;
+        let isCheckingId = false;
+
+        // Handle the actual login request
+        async function attemptLogin(studentId, password) {
+            if (isVerifying) return;
+            isVerifying = true;
+
+            const controller = new AbortController();
+            const timeoutId = setTimeout(() => controller.abort(), 25000);
+
+            errorMessage.style.display = 'none';
+            studentNameDisplay.style.display = 'block';
+            studentNameDisplay.style.color = '#555';
+            studentNameDisplay.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Verifying...';
+            signInBtn.textContent = 'Verifying...';
+            signInBtn.disabled = true;
+
+            try {
+                const response = await fetch(url, {
+                    method: 'POST',
+                    signal: controller.signal,
+                    body: JSON.stringify({
+                        action: 'login',
+                        student_id: studentId,
+                        password: password
+                    })
+                });
+                
+                clearTimeout(timeoutId);
+                const result = await response.json();
+                
+                if (result.status === 'success') {
+                    // Show Name on Screen!
+                    const displayName = result.name || 'User';
+                    studentNameDisplay.style.color = '#ffffff';
+                    studentNameDisplay.innerHTML = '<i class="fa-solid fa-check-circle" style="color: #4ade80; margin-right: 5px;"></i> Welcome, ' + displayName + '!';
+                    
+                    // Save user data to localStorage
+                    localStorage.setItem('currentUser', JSON.stringify({
+                        student_id: studentId,
+                        role: result.role,
+                        name: result.name,
+                        balance: result.balance,
+                        status_val: result.status_val,
+                        lrn: result.lrn,
+                        dob: result.dob,
+                        age: result.age,
+                        sex: result.sex,
+                        contact: result.contact
+                    }));
+
+                    await Swal.fire({
+                        title: 'Login Successful!',
+                        text: 'Welcome to your Student Portal.',
+                        icon: 'success',
+                        timer: 1500,
+                        showConfirmButton: false
+                    });
+                    
+                    // Route based on role
+                    if (result.role === 'admin') {
+                        window.location.href = 'adminportal.html';
+                    } else if (result.role === 'staff') {
+                        window.location.href = 'staffportal.html';
+                    } else {
+                        window.location.href = 'studentportal.html';
+                    }
+                } else {
+                    const displayName = result.name || 'User';
+                    studentNameDisplay.style.display = 'block';
+                    studentNameDisplay.style.color = '#ffffff';
+                    studentNameDisplay.innerHTML = '<i class="fa-solid fa-check-circle" style="color: #4ade80; margin-right: 5px;"></i> Welcome, ' + displayName + '!'; 
+                    errorMessage.textContent = result.message || 'Incorrect Password';
+                    errorMessage.style.display = 'block';
+                    signInBtn.textContent = 'Sign In';
+                    signInBtn.disabled = false;
+                }
+            } catch (error) {
+                console.error('Error:', error);
+                if (error.name === 'AbortError') {
+                    errorMessage.textContent = 'Server is taking too long. Please try again.';
+                } else {
+                    errorMessage.textContent = 'Network Error. Please check your connection.';
+                }
+                errorMessage.style.display = 'block';
+                signInBtn.textContent = 'Sign In';
+                signInBtn.disabled = false;
+            } finally {
+                isVerifying = false;
+            }
+        }
+
+        // Handle ID Verification
+        async function verifyStudentId() {
+            if (isCheckingId) return;
+            // If Step 2 is already visible, ignore any delayed checks (like from browser autofill modifying the hidden ID)
+            if (step2Container.style.display === 'block' || step2Container.style.display === '') return;
+            
+            const studentId = studentIdInput.value.trim();
+            if (studentId === '') {
+                errorMessage.textContent = 'Please enter your Student ID.';
+                errorMessage.style.display = 'block';
+                return;
+            }
+
+            errorMessage.style.display = 'none';
+            studentNameDisplay.style.display = 'block';
+            studentNameDisplay.style.color = '#555';
+            studentNameDisplay.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Checking ID...';
+            nextBtn.disabled = true;
+            nextBtn.textContent = 'Checking...';
+
+            try {
+                const response = await fetch(url, {
+                    method: 'POST',
+                    body: JSON.stringify({
+                        action: 'verifyId',
+                        student_id: studentId
+                    })
+                });
+                const result = await response.json();
+                
+                if (result.status === 'success') {
+                    const displayName = result.name || 'User';
+                    studentNameDisplay.style.color = '#ffffff';
+                    studentNameDisplay.innerHTML = '<i class="fa-solid fa-check-circle" style="color: #4ade80; margin-right: 5px;"></i> Welcome, ' + displayName + '!';
+                    
+                    // Proceed to Step 2
+                    step1Container.style.display = 'none';
+                    step2Container.style.display = 'block';
+                    step2Container.classList.add('fade-in-up');
+                    passwordInput.focus();
+
+                } else {
+                    studentNameDisplay.style.display = 'none';
+                    errorMessage.textContent = 'Student ID not found.';
+                    errorMessage.style.display = 'block';
+                    nextBtn.disabled = false;
+                    nextBtn.textContent = 'Next';
+                }
+            } catch (error) {
+                console.error("verifyId error:", error);
+                studentNameDisplay.style.display = 'none';
+                errorMessage.textContent = 'Network error verifying ID.';
+                errorMessage.style.display = 'block';
+                nextBtn.disabled = false;
+                nextBtn.textContent = 'Next';
+            } finally {
+                isCheckingId = false;
+            }
+        }
+
+        // Auto-verify Student ID
+        studentIdInput.addEventListener('input', debounce(function() {
+            if (studentIdInput.value.trim().length >= 4) {
+                verifyStudentId();
+            }
+        }, 800));
+
+        // Manual Next Button Click
+        nextBtn.addEventListener('click', verifyStudentId);
+
+        // Back Button Click
+        backBtn.addEventListener('click', function(e) {
+            e.preventDefault();
+            step2Container.style.display = 'none';
+            step1Container.style.display = 'block';
+            studentNameDisplay.style.display = 'none';
+            errorMessage.style.display = 'none';
+            passwordInput.value = '';
+            nextBtn.disabled = false;
+            nextBtn.textContent = 'Next';
+            studentIdInput.focus();
+        });
+
+        // Auto-verify when typing password
+        passwordInput.addEventListener('input', debounce(function() {
+            const studentId = studentIdInput.value.trim();
+            const password = passwordInput.value.trim();
+            if (studentId !== '' && password.length >= 4) {
+                // Auto trigger login check
+                attemptLogin(studentId, password);
+            }
+        }, 800)); // wait 0.8 seconds after they stop typing
+
+        // Manual submit
+        loginForm.addEventListener('submit', function(event) {
+            event.preventDefault(); 
+            const studentId = studentIdInput.value.trim();
+            const password = passwordInput.value.trim();
+
+            if (step2Container.style.display === 'none') {
+                verifyStudentId();
+                return;
+            }
+
+            if (studentId === '' || password === '') {
+                errorMessage.textContent = 'Please enter your password.';
+                errorMessage.style.display = 'block';
+                return;
+            }
+            attemptLogin(studentId, password);
+        });
+
+        // Reset button state if returning via browser "Back" button
+        window.addEventListener('pageshow', function (event) {
+            if (event.persisted) {
+                signInBtn.textContent = 'Sign In';
+                signInBtn.disabled = false;
+                passwordInput.value = ''; 
+                step2Container.style.display = 'none';
+                step1Container.style.display = 'block';
+                studentNameDisplay.style.display = 'none';
+                errorMessage.style.display = 'none';
+                nextBtn.disabled = false;
+                nextBtn.textContent = 'Next';
+            }
+        });
+
+        // About School Toggle
+        const loginContainer = document.getElementById('loginContainer');
+        const aboutContainer = document.getElementById('aboutContainer');
+        const aboutSchoolBtn = document.getElementById('aboutSchoolBtn');
+        const exitAboutBtn = document.getElementById('exitAboutBtn');
+        const headlineContainer = document.querySelector('.headline-container');
+
+        aboutSchoolBtn.addEventListener('click', function(e) {
+            e.preventDefault();
+            loginContainer.style.display = 'none';
+            if (headlineContainer) headlineContainer.style.display = 'none';
+            aboutContainer.style.display = 'flex';
+            aboutContainer.classList.add('fade-in');
+            this.parentElement.style.display = 'none'; // hide the footer link
+        });
+
+        exitAboutBtn.addEventListener('click', function(e) {
+            e.preventDefault();
+            aboutContainer.style.display = 'none';
+            loginContainer.style.display = 'flex';
+            if (headlineContainer) headlineContainer.style.display = 'block';
+            loginContainer.classList.add('fade-in');
+            aboutSchoolBtn.parentElement.style.display = 'block'; // show the footer link
+        });
+    </script>
+    <script>
+      if ('serviceWorker' in navigator) {
+        window.addEventListener('load', () => {
+          navigator.serviceWorker.register('./sw.js').then(reg => {
+            console.log('ServiceWorker registered:', reg.scope);
+          }).catch(err => {
+            console.log('ServiceWorker registration failed:', err);
+          });
+
+          // Bulletproof automatic reload when a new version of the app is pushed
+          let refreshing = false;
+          navigator.serviceWorker.addEventListener('controllerchange', () => {
+            if (!refreshing) {
+              refreshing = true;
+              window.location.reload();
+            }
+          });
+        });
+      }
+    </script>
+</body>
+</html>

@@ -1,0 +1,462 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Portal</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap');
+        body {
+            background-image: url('bghome.jpg');
+            background-size: cover;
+            background-position: center;
+            background-attachment: fixed;
+            font-family: 'Inter', sans-serif;
+            color: #333;
+            margin: 0;
+            padding: 0;
+        }
+        .dashboard-container {
+            margin: 80px auto;
+            max-width: 1000px;
+            background: rgba(255, 255, 255, 0.90);
+            backdrop-filter: blur(15px);
+            border-radius: 20px;
+            padding: 40px;
+            box-shadow: 0 8px 32px rgba(0,0,0,0.2);
+            min-height: 500px;
+        }
+        h1 { color: #008751; margin-bottom: 10px; }
+        
+        /* View Sections */
+        .view-section { display: none; }
+        .view-section.active { display: block; animation: fadeIn 0.3s; }
+        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+
+        .card-grid {
+            display: flex;
+            gap: 20px;
+            flex-wrap: wrap;
+            margin-top: 30px;
+        }
+        .card {
+            flex: 1 1 250px;
+            background: white;
+            padding: 25px;
+            border-radius: 12px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.05);
+            text-align: center;
+            border-top: 4px solid #008751;
+            transition: transform 0.3s ease;
+            cursor: pointer;
+        }
+        .card:hover { transform: translateY(-5px); }
+        .card i { font-size: 35px; color: #008751; margin-bottom: 15px; }
+        
+        .logout-btn, .back-btn {
+            background: #ff4d4d;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 600;
+            transition: background 0.3s;
+        }
+        .logout-btn { float: right; }
+        .logout-btn:hover { background: #e60000; }
+        .back-btn { background: #555; margin-bottom: 20px; display: inline-flex; align-items: center; gap: 8px; }
+        .back-btn:hover { background: #333; }
+
+        /* Table Styles */
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+            background: white;
+            border-radius: 8px;
+            overflow: hidden;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+        th, td {
+            padding: 12px 15px;
+            text-align: left;
+            border-bottom: 1px solid #eee;
+            font-size: 14px;
+        }
+        th { background-color: #008751; color: white; font-weight: 500; }
+        tr:hover { background-color: #f9f9f9; }
+        .edit-input {
+            width: 100px;
+            padding: 8px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+            font-family: 'Inter', sans-serif;
+        }
+        .save-btn {
+            background: #008751;
+            color: white;
+            border: none;
+            padding: 8px 15px;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: background 0.3s;
+        }
+        .save-btn:hover { background: #00683f; }
+        .loading-text { font-style: italic; color: #666; }
+
+        /* Form Styles */
+        .form-group {
+            margin-bottom: 20px;
+            max-width: 600px;
+        }
+        .form-group label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 600;
+            color: #333;
+        }
+        .form-group textarea {
+            width: 100%;
+            height: 150px;
+            padding: 15px;
+            border: 1px solid #ccc;
+            border-radius: 8px;
+            font-family: 'Inter', sans-serif;
+            font-size: 15px;
+            resize: vertical;
+        }
+        .post-btn {
+            background: #10af33;
+            color: white;
+            border: none;
+            padding: 12px 25px;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: background 0.3s;
+        }
+        .post-btn:hover { background: #0c9c2c; }
+
+        /* Settings Mockup */
+        .settings-container {
+            background: white;
+            padding: 30px;
+            border-radius: 12px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.05);
+            max-width: 600px;
+            margin-top: 20px;
+        }
+        .setting-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 15px 0;
+            border-bottom: 1px solid #eee;
+        }
+        .setting-row:last-child { border-bottom: none; }
+        .toggle-switch {
+            position: relative;
+            display: inline-block;
+            width: 50px;
+            height: 24px;
+        }
+        .toggle-switch input { opacity: 0; width: 0; height: 0; }
+        .slider {
+            position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0;
+            background-color: #ccc; transition: .4s; border-radius: 24px;
+        }
+        .slider:before {
+            position: absolute; content: ""; height: 18px; width: 18px; left: 3px; bottom: 3px;
+            background-color: white; transition: .4s; border-radius: 50%;
+        }
+        input:checked + .slider { background-color: #008751; }
+        input:checked + .slider:before { transform: translateX(26px); }
+    </style>
+</head>
+<body>
+    <div class="dashboard-container">
+        <button class="logout-btn" onclick="logout()">Logout</button>
+        
+        <!-- MAIN DASHBOARD -->
+        <div id="main-dashboard" class="view-section active">
+            <h1><i class="fa-solid fa-user-shield"></i> Admin Dashboard</h1>
+            <p>Welcome, <span id="admin-name">Administrator</span>. You have full system access.</p>
+            
+            <div class="card-grid">
+                <div class="card" onclick="showView('manage-users-view'); loadUsers();">
+                    <i class="fa-solid fa-users"></i>
+                    <h3>Manage Users</h3>
+                    <p>View students and securely edit their balances.</p>
+                </div>
+                <div class="card" onclick="showView('announcements-view')">
+                    <i class="fa-solid fa-bullhorn"></i>
+                    <h3>Global Announcements</h3>
+                    <p>Post important announcements to all portals.</p>
+                </div>
+                <div class="card" onclick="showView('settings-view')">
+                    <i class="fa-solid fa-cogs"></i>
+                    <h3>System Settings</h3>
+                    <p>Configure portal options and security.</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- MANAGE USERS VIEW -->
+        <div id="manage-users-view" class="view-section">
+            <button class="back-btn" onclick="showView('main-dashboard')"><i class="fa-solid fa-arrow-left"></i> Back to Dashboard</button>
+            <h2><i class="fa-solid fa-users"></i> Manage Users</h2>
+            <p>Edit student balances and status below. Changes will save directly to your Google Sheet.</p>
+            
+            <p id="users-loading" class="loading-text">Loading users securely from database...</p>
+            
+            <div style="overflow-x: auto;">
+                <table id="users-table" style="display:none; min-width: 800px;">
+                    <thead>
+                        <tr>
+                            <th>Student ID</th>
+                            <th>Name</th>
+                            <th>Contact #</th>
+                            <th>Role</th>
+                            <th>Balance (₱)</th>
+                            <th>Status</th>
+                            <th>Action</th>
+                        </tr>
+                    </thead>
+                    <tbody id="users-tbody"></tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- ANNOUNCEMENTS VIEW -->
+        <div id="announcements-view" class="view-section">
+            <button class="back-btn" onclick="showView('main-dashboard')"><i class="fa-solid fa-arrow-left"></i> Back to Dashboard</button>
+            <h2><i class="fa-solid fa-bullhorn"></i> Post Announcement</h2>
+            <p>Write an announcement below. It will instantly appear on the Student Portal feed.</p>
+            
+            <div class="form-group">
+                <label for="announcement-msg">Announcement Message:</label>
+                <textarea id="announcement-msg" placeholder="Type your message here..."></textarea>
+            </div>
+            <button class="post-btn" id="post-announcement-btn" onclick="postAnnouncement()"><i class="fa-solid fa-paper-plane"></i> Post to Feed</button>
+            <p id="post-status" style="margin-top: 10px; font-weight: 500; display: none;"></p>
+        </div>
+
+        <!-- SETTINGS VIEW (MOCKUP) -->
+        <div id="settings-view" class="view-section">
+            <button class="back-btn" onclick="showView('main-dashboard')"><i class="fa-solid fa-arrow-left"></i> Back to Dashboard</button>
+            <h2><i class="fa-solid fa-cogs"></i> System Settings</h2>
+            <p>Configure global portal options.</p>
+            
+            <div class="settings-container">
+                <div class="setting-row">
+                    <div>
+                        <strong>Maintenance Mode</strong>
+                        <p style="margin: 5px 0 0; color: #666; font-size: 14px;">Temporarily disable logins for all users except Admins.</p>
+                    </div>
+                    <label class="toggle-switch">
+                        <input type="checkbox">
+                        <span class="slider"></span>
+                    </label>
+                </div>
+                <div class="setting-row">
+                    <div>
+                        <strong>Allow Student Registration</strong>
+                        <p style="margin: 5px 0 0; color: #666; font-size: 14px;">Allow new students to create an account from the login page.</p>
+                    </div>
+                    <label class="toggle-switch">
+                        <input type="checkbox" checked>
+                        <span class="slider"></span>
+                    </label>
+                </div>
+                <div class="setting-row">
+                    <div>
+                        <strong>Email Notifications</strong>
+                        <p style="margin: 5px 0 0; color: #666; font-size: 14px;">Send automated emails when balances are updated.</p>
+                    </div>
+                    <label class="toggle-switch">
+                        <input type="checkbox">
+                        <span class="slider"></span>
+                    </label>
+                </div>
+            </div>
+            <p style="margin-top: 15px; color: #888; font-size: 13px;"><em>Note: Settings are currently in preview mode.</em></p>
+        </div>
+
+    </div>
+
+    <script>
+        // Security check - kick them out if not admin!
+        const currentUser = JSON.parse(localStorage.getItem('currentUser'));
+        if (!currentUser || currentUser.role !== 'admin') {
+            window.location.href = 'index.html';
+        } else {
+            document.getElementById('admin-name').innerText = currentUser.name || "Administrator";
+        }
+
+        const url = 'https://script.google.com/macros/s/AKfycbz6cR-xROnKZME0Fu3CSxiyhYlt4gJgcxxx-Wu_DR9sT2d8H4mrPTtU4XM5GWXFjzfe/exec';
+
+        function logout() {
+            localStorage.removeItem('currentUser');
+            window.location.href = 'index.html';
+        }
+
+        function showView(viewId) {
+            document.querySelectorAll('.view-section').forEach(el => el.classList.remove('active'));
+            document.getElementById(viewId).classList.add('active');
+        }
+
+        async function loadUsers() {
+            const loading = document.getElementById('users-loading');
+            const table = document.getElementById('users-table');
+            const tbody = document.getElementById('users-tbody');
+            
+            loading.style.display = 'block';
+            table.style.display = 'none';
+            tbody.innerHTML = '';
+
+            try {
+                const response = await fetch(url, {
+                    method: 'POST',
+                    body: JSON.stringify({
+                        action: 'fetch_data',
+                        role: currentUser.role,
+                        student_id: currentUser.student_id
+                    })
+                });
+                
+                const result = await response.json();
+                
+                if (result.status === 'success') {
+                    result.data.forEach(user => {
+                        // Skip empty rows and non-student roles
+                        if (!user.student_id || user.role !== 'student') return;
+
+                        const tr = document.createElement('tr');
+                        tr.innerHTML = `
+                            <td><strong>${user.student_id}</strong></td>
+                            <td>${user.name || '<i>Not set</i>'}</td>
+                            <td>${user.contact || '<i>No record</i>'}</td>
+                            <td><span style="text-transform: capitalize;">${user.role}</span></td>
+                            <td>
+                                ${user.role === 'student' ? 
+                                `<input type="number" id="balance-${user.student_id}" class="edit-input" value="${user.balance || 0}" style="width: 80px;">` 
+                                : `<span>N/A</span>`}
+                            </td>
+                            <td>
+                                ${user.role === 'student' ? 
+                                `<select id="status-${user.student_id}" class="edit-input" style="width: 100px;">
+                                    <option value="Pending" ${(!user.status_val || user.status_val === 'Pending') ? 'selected' : ''}>Pending</option>
+                                    <option value="Paid" ${user.status_val === 'Paid' ? 'selected' : ''}>Paid</option>
+                                    <option value="Unpaid" ${user.status_val === 'Unpaid' ? 'selected' : ''}>Unpaid</option>
+                                </select>` 
+                                : `<span>N/A</span>`}
+                            </td>
+                            <td>
+                                ${user.role === 'student' ? 
+                                `<button class="save-btn" onclick="updateUser('${user.student_id}', this)">Save</button>`
+                                : ``}
+                            </td>
+                        `;
+                        tbody.appendChild(tr);
+                    });
+                    loading.style.display = 'none';
+                    table.style.display = 'table';
+                } else {
+                    loading.innerText = "Error loading data: " + result.message;
+                }
+            } catch (error) {
+                console.error(error);
+                loading.innerText = "Network error while loading data.";
+            }
+        }
+
+        async function updateUser(targetId, btn) {
+            const newBalance = document.getElementById(`balance-${targetId}`).value;
+            const newStatus = document.getElementById(`status-${targetId}`).value;
+            btn.innerText = "Saving...";
+            btn.disabled = true;
+
+            try {
+                const response = await fetch(url, {
+                    method: 'POST',
+                    body: JSON.stringify({
+                        action: 'edit_data',
+                        role: currentUser.role,
+                        target_id: targetId,
+                        new_balance: newBalance,
+                        new_status: newStatus
+                    })
+                });
+                const result = await response.json();
+                if (result.status === 'success') {
+                    btn.innerText = "Saved ✓";
+                    btn.style.backgroundColor = "#1b5e20";
+                    setTimeout(() => {
+                        btn.innerText = "Save";
+                        btn.style.backgroundColor = "#008751";
+                        btn.disabled = false;
+                    }, 2000);
+                } else {
+                    alert("Error saving: " + result.message);
+                    btn.innerText = "Save";
+                    btn.disabled = false;
+                }
+            } catch (error) {
+                alert("Network error.");
+                btn.innerText = "Save";
+                btn.disabled = false;
+            }
+        }
+
+        async function postAnnouncement() {
+            const msgInput = document.getElementById('announcement-msg');
+            const msg = msgInput.value.trim();
+            if (!msg) {
+                alert("Please enter a message.");
+                return;
+            }
+
+            const btn = document.getElementById('post-announcement-btn');
+            const statusLabel = document.getElementById('post-status');
+            
+            btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Posting...';
+            btn.disabled = true;
+            statusLabel.style.display = 'none';
+
+            try {
+                const response = await fetch(url, {
+                    method: 'POST',
+                    body: JSON.stringify({
+                        action: 'post_announcement',
+                        role: currentUser.role,
+                        author: currentUser.name || "Administrator",
+                        message: msg
+                    })
+                });
+                const result = await response.json();
+                
+                if (result.status === 'success') {
+                    msgInput.value = '';
+                    statusLabel.innerText = "Announcement posted successfully!";
+                    statusLabel.style.color = "#008751";
+                    statusLabel.style.display = 'block';
+                } else {
+                    statusLabel.innerText = "Error: " + result.message;
+                    statusLabel.style.color = "#ff4d4d";
+                    statusLabel.style.display = 'block';
+                }
+            } catch (error) {
+                statusLabel.innerText = "Network error while posting.";
+                statusLabel.style.color = "#ff4d4d";
+                statusLabel.style.display = 'block';
+            }
+            
+            btn.innerHTML = '<i class="fa-solid fa-paper-plane"></i> Post to Feed';
+            btn.disabled = false;
+        }
+    </script>
+</body>
+</html>

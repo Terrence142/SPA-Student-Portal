@@ -1,0 +1,464 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Student Portal</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Vercel Analytics -->
+    <script>
+        window.va = window.va || function () { (window.vaq = window.vaq || []).push(arguments); };
+    </script>
+    <script defer src="/_vercel/insights/script.js"></script>
+    <link rel="manifest" href="manifest.json">
+    <meta name="theme-color" content="#008751">
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap');
+        body {
+            background-image: url('bg.jpg');
+            background-size: cover;
+            background-position: center;
+            background-attachment: fixed;
+            font-family: 'Inter', sans-serif;
+            color: #333;
+            margin: 0;
+            padding: 0;
+        }
+        .dashboard-container {
+            margin: 80px auto;
+            max-width: 1000px;
+            background: rgba(255, 255, 255, 0.90);
+            backdrop-filter: blur(15px);
+            border-radius: 20px;
+            padding: 40px;
+            box-shadow: 0 8px 32px rgba(0,0,0,0.2);
+            min-height: 500px;
+        }
+        h1 { color: #008751; margin-bottom: 10px; }
+        
+        /* View Sections */
+        .view-section { display: none; }
+        .view-section.active { display: block; animation: fadeIn 0.3s; }
+        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+
+        .card-grid {
+            display: flex;
+            gap: 20px;
+            flex-wrap: wrap;
+            margin-top: 30px;
+        }
+        .card {
+            flex: 1 1 250px;
+            background: white;
+            padding: 25px;
+            border-radius: 12px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.05);
+            text-align: center;
+            border-top: 4px solid #008751;
+            transition: transform 0.3s ease;
+            cursor: pointer;
+        }
+        .card:hover { transform: translateY(-5px); }
+        .card i { font-size: 35px; color: #008751; margin-bottom: 15px; }
+        
+        .logout-btn, .back-btn {
+            background: #ff4d4d;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 600;
+            transition: background 0.3s;
+        }
+        .logout-btn { float: right; }
+        .logout-btn:hover { background: #e60000; }
+        .back-btn { background: #555; margin-bottom: 20px; display: inline-flex; align-items: center; gap: 8px; }
+        .back-btn:hover { background: #333; }
+
+        /* Profile Box Styles */
+        .profile-box {
+            background: white;
+            padding: 30px;
+            border-radius: 12px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.05);
+            max-width: 600px;
+            margin-top: 20px;
+            border-left: 5px solid #008751;
+        }
+        .profile-row {
+            display: flex;
+            justify-content: space-between;
+            padding: 12px 0;
+            border-bottom: 1px solid #eee;
+            font-size: 16px;
+        }
+        .profile-row:last-child { border-bottom: none; }
+        .profile-label { color: #666; font-weight: 500; }
+        .profile-value { font-weight: 600; color: #333; text-align: right; }
+        .balance-value { color: #008751; font-size: 22px; }
+
+        /* Announcement Feed Styles */
+        .feed-container {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+            margin-top: 20px;
+        }
+        .announcement-card {
+            background: white;
+            padding: 20px;
+            border-radius: 12px;
+            border-left: 5px solid #10af33;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.05);
+        }
+        .announcement-meta {
+            font-size: 13px;
+            color: #777;
+            margin-bottom: 10px;
+            font-weight: 500;
+        }
+        .announcement-text {
+            font-size: 16px;
+            line-height: 1.5;
+            color: #333;
+        }
+
+        /* Schedule Table */
+        .schedule-table {
+            width: 100%;
+            border-collapse: collapse;
+            background: white;
+            border-radius: 8px;
+            overflow: hidden;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.05);
+            margin-top: 20px;
+        }
+        .schedule-table th, .schedule-table td {
+            padding: 15px;
+            text-align: center;
+            border-bottom: 1px solid #eee;
+            border-right: 1px solid #eee;
+        }
+        .schedule-table th {
+            background-color: #008751;
+            color: white;
+            font-weight: 600;
+        }
+        .schedule-table td:last-child, .schedule-table th:last-child { border-right: none; }
+        .time-col { font-weight: 600; background: #f9f9f9; color: #555; }
+        .class-slot { background: #e8f5e9; color: #1b5e20; font-weight: 600; border-radius: 4px; }
+        .break-slot { background: #fff3e0; color: #e65100; font-weight: 600; }
+
+        /* Document Links */
+        .doc-link {
+            display: block;
+            text-decoration: none;
+            border-left-color: #e63946;
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+        .doc-link:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 6px 15px rgba(0,0,0,0.1);
+        }
+    </style>
+</head>
+<body>
+    <div class="dashboard-container">
+        <button class="logout-btn" onclick="logout()">Logout</button>
+        
+        <!-- MAIN DASHBOARD -->
+        <div id="main-dashboard" class="view-section active">
+            <h1><i class="fa-solid fa-graduation-cap"></i> Student Dashboard</h1>
+            <p>Welcome back, <span id="student-name">Student</span>! Check your progress and latest updates here.</p>
+            
+            <div class="card-grid">
+                <div class="card" onclick="showView('profile-view'); populateProfile();">
+                    <i class="fa-solid fa-id-card"></i>
+                    <h3>My Profile & Balance</h3>
+                    <p>View your personal information and current outstanding balance.</p>
+                </div>
+                <div class="card" onclick="showView('schedule-view')">
+                    <i class="fa-solid fa-calendar-days"></i>
+                    <h3>Class Schedule</h3>
+                    <p>View your weekly class schedule and room assignments.</p>
+                </div>
+                <div class="card" onclick="showView('announcements-view'); loadAnnouncements();">
+                    <i class="fa-solid fa-bell"></i>
+                    <h3>Announcements</h3>
+                    <p>Read the latest news and updates from the school.</p>
+                </div>
+                <div class="card" onclick="showView('documents-view')">
+                    <i class="fa-solid fa-file-pdf"></i>
+                    <h3>Download Documents</h3>
+                    <p>Access enrollment forms, student handbook, and waivers.</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- PROFILE VIEW -->
+        <div id="profile-view" class="view-section">
+            <button class="back-btn" onclick="showView('main-dashboard')"><i class="fa-solid fa-arrow-left"></i> Back to Dashboard</button>
+            <h2><i class="fa-solid fa-user"></i> My Profile & Balance</h2>
+            
+            <div class="profile-box">
+                <div class="profile-row">
+                    <span class="profile-label">Student Name:</span>
+                    <span class="profile-value" id="prof-name">Loading...</span>
+                </div>
+                <div class="profile-row">
+                    <span class="profile-label">LRN:</span>
+                    <span class="profile-value" id="prof-lrn">Loading...</span>
+                </div>
+                <div class="profile-row">
+                    <span class="profile-label">Student ID:</span>
+                    <span class="profile-value" id="prof-id">Loading...</span>
+                </div>
+                <div class="profile-row">
+                    <span class="profile-label">Date of Birth:</span>
+                    <span class="profile-value" id="prof-dob">Loading...</span>
+                </div>
+                <div class="profile-row">
+                    <span class="profile-label">Age / Sex:</span>
+                    <span class="profile-value"><span id="prof-age">0</span> / <span id="prof-sex">-</span></span>
+                </div>
+                <div class="profile-row">
+                    <span class="profile-label">Guardian Contact:</span>
+                    <span class="profile-value" id="prof-contact">Loading...</span>
+                </div>
+                <div class="profile-row">
+                    <span class="profile-label">Current Balance:</span>
+                    <span class="profile-value balance-value">₱<span id="prof-balance">0</span></span>
+                </div>
+                <div class="profile-row">
+                    <span class="profile-label">Enrollment Status:</span>
+                    <span class="profile-value" id="prof-status" style="text-transform: capitalize;">Loading...</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- ANNOUNCEMENTS VIEW -->
+        <div id="announcements-view" class="view-section">
+            <button class="back-btn" onclick="showView('main-dashboard')"><i class="fa-solid fa-arrow-left"></i> Back to Dashboard</button>
+            <h2><i class="fa-solid fa-bell"></i> Latest Announcements</h2>
+            <p>Stay up to date with the latest news from your teachers and administrators.</p>
+            
+            <p id="announcements-loading" style="font-style: italic; color: #666;">Checking for new announcements...</p>
+            <div class="feed-container" id="feed-container">
+                <!-- Announcements will be injected here -->
+            </div>
+        </div>
+
+        <!-- SCHEDULE VIEW -->
+        <div id="schedule-view" class="view-section">
+            <button class="back-btn" onclick="showView('main-dashboard')"><i class="fa-solid fa-arrow-left"></i> Back to Dashboard</button>
+            <h2><i class="fa-solid fa-calendar-days"></i> Weekly Schedule</h2>
+            <p>Your current class schedule for the semester.</p>
+            
+            <div style="overflow-x: auto;">
+                <table class="schedule-table">
+                    <thead>
+                        <tr>
+                            <th>Time</th>
+                            <th>Monday</th>
+                            <th>Tuesday</th>
+                            <th>Wednesday</th>
+                            <th>Thursday</th>
+                            <th>Friday</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td class="time-col">08:00 AM - 09:30 AM</td>
+                            <td class="class-slot">Mathematics<br><small>Room 101</small></td>
+                            <td class="class-slot">Science<br><small>Lab A</small></td>
+                            <td class="class-slot">Mathematics<br><small>Room 101</small></td>
+                            <td class="class-slot">Science<br><small>Lab A</small></td>
+                            <td class="class-slot">Physical Ed.<br><small>Gym</small></td>
+                        </tr>
+                        <tr>
+                            <td class="time-col">09:30 AM - 11:00 AM</td>
+                            <td class="class-slot">English<br><small>Room 102</small></td>
+                            <td class="class-slot">History<br><small>Room 205</small></td>
+                            <td class="class-slot">English<br><small>Room 102</small></td>
+                            <td class="class-slot">History<br><small>Room 205</small></td>
+                            <td class="class-slot">Computer<br><small>Lab B</small></td>
+                        </tr>
+                        <tr>
+                            <td class="time-col">11:00 AM - 12:00 PM</td>
+                            <td colspan="5" class="break-slot">LUNCH BREAK</td>
+                        </tr>
+                        <tr>
+                            <td class="time-col">12:00 PM - 01:30 PM</td>
+                            <td class="class-slot">Values Ed.<br><small>Room 105</small></td>
+                            <td>-</td>
+                            <td class="class-slot">Values Ed.<br><small>Room 105</small></td>
+                            <td>-</td>
+                            <td class="class-slot">Arts & Music<br><small>Room 106</small></td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- DOCUMENTS VIEW -->
+        <div id="documents-view" class="view-section">
+            <button class="back-btn" onclick="showView('main-dashboard')"><i class="fa-solid fa-arrow-left"></i> Back to Dashboard</button>
+            <h2><i class="fa-solid fa-file-pdf"></i> Download Documents</h2>
+            <p>Click on any document below to download it directly to your device.</p>
+            
+            <div class="feed-container">
+                <a href="#" class="announcement-card doc-link" onclick="Swal.fire({title: 'Download Started!', text: 'This is a presentation mockup. In a fully built system, the Student Handbook PDF would download now.', icon: 'info', confirmButtonColor: '#008751'})">
+                    <div style="display: flex; align-items: center; gap: 20px;">
+                        <i class="fa-solid fa-file-pdf" style="font-size: 35px; color: #e63946;"></i>
+                        <div>
+                            <div class="announcement-text" style="font-weight: 600;">Student Handbook 2025-2026</div>
+                            <div class="announcement-meta" style="margin-bottom: 0; margin-top: 5px;">PDF Document &bull; 2.4 MB</div>
+                        </div>
+                        <i class="fa-solid fa-download" style="margin-left: auto; font-size: 20px; color: #777;"></i>
+                    </div>
+                </a>
+
+                <a href="#" class="announcement-card doc-link" onclick="Swal.fire({title: 'Download Started!', text: 'This is a presentation mockup. In a fully built system, the Medical Waiver PDF would download now.', icon: 'info', confirmButtonColor: '#008751'})">
+                    <div style="display: flex; align-items: center; gap: 20px;">
+                        <i class="fa-solid fa-file-pdf" style="font-size: 35px; color: #e63946;"></i>
+                        <div>
+                            <div class="announcement-text" style="font-weight: 600;">Medical Waiver &amp; Consent Form</div>
+                            <div class="announcement-meta" style="margin-bottom: 0; margin-top: 5px;">PDF Document &bull; 150 KB</div>
+                        </div>
+                        <i class="fa-solid fa-download" style="margin-left: auto; font-size: 20px; color: #777;"></i>
+                    </div>
+                </a>
+
+                <a href="#" class="announcement-card doc-link" onclick="Swal.fire({title: 'Download Started!', text: 'This is a presentation mockup. In a fully built system, the Clearance Form PDF would download now.', icon: 'info', confirmButtonColor: '#008751'})">
+                    <div style="display: flex; align-items: center; gap: 20px;">
+                        <i class="fa-solid fa-file-pdf" style="font-size: 35px; color: #e63946;"></i>
+                        <div>
+                            <div class="announcement-text" style="font-weight: 600;">Student Clearance Form</div>
+                            <div class="announcement-meta" style="margin-bottom: 0; margin-top: 5px;">PDF Document &bull; 85 KB</div>
+                        </div>
+                        <i class="fa-solid fa-download" style="margin-left: auto; font-size: 20px; color: #777;"></i>
+                    </div>
+                </a>
+            </div>
+        </div>
+
+    </div>
+
+    <!-- SweetAlert2 -->
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
+    <script>
+        // Security check
+        const currentUser = JSON.parse(localStorage.getItem('currentUser'));
+        if (!currentUser || currentUser.role !== 'student') {
+            window.location.href = 'index.html';
+        } else {
+            // Put name on dashboard
+            document.getElementById('student-name').innerText = currentUser.name || "Student";
+        }
+
+        const url = 'https://script.google.com/macros/s/AKfycbz6cR-xROnKZME0Fu3CSxiyhYlt4gJgcxxx-Wu_DR9sT2d8H4mrPTtU4XM5GWXFjzfe/exec';
+
+        function logout() {
+            localStorage.removeItem('currentUser');
+            window.location.href = 'index.html';
+        }
+
+        function showView(viewId) {
+            document.querySelectorAll('.view-section').forEach(el => el.classList.remove('active'));
+            document.getElementById(viewId).classList.add('active');
+        }
+
+        function populateProfile() {
+            // We read from the local storage we saved during login
+            document.getElementById('prof-name').innerText = currentUser.name || "Not set";
+            document.getElementById('prof-id').innerText = currentUser.student_id || "N/A";
+            document.getElementById('prof-balance').innerText = currentUser.balance || "0";
+            
+            // Extended Info
+            document.getElementById('prof-lrn').innerText = currentUser.lrn || "N/A";
+            
+            // Format Date safely
+            let dobText = "N/A";
+            if (currentUser.dob) {
+                try {
+                    const dateObj = new Date(currentUser.dob);
+                    if (!isNaN(dateObj)) {
+                        // Format as spelled out Month (e.g. October 11, 2009)
+                        dobText = dateObj.toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' });
+                    } else {
+                        dobText = currentUser.dob; // fallback
+                    }
+                } catch(e) { dobText = currentUser.dob; }
+            }
+            document.getElementById('prof-dob').innerText = dobText;
+            
+            document.getElementById('prof-age').innerText = currentUser.age || "N/A";
+            document.getElementById('prof-sex').innerText = currentUser.sex || "N/A";
+            document.getElementById('prof-contact').innerText = currentUser.contact || "N/A";
+
+            // Set status
+            const statusText = currentUser.status_val || "Pending";
+            const statusEl = document.getElementById('prof-status');
+            statusEl.innerText = statusText;
+            if(statusText.toLowerCase() === 'paid') statusEl.style.color = '#008751';
+            else if(statusText.toLowerCase() === 'unpaid') statusEl.style.color = '#ff4d4d';
+            else statusEl.style.color = '#e6a23c'; 
+        }
+
+        async function loadAnnouncements() {
+            const loading = document.getElementById('announcements-loading');
+            const feed = document.getElementById('feed-container');
+            
+            loading.style.display = 'block';
+            feed.innerHTML = '';
+
+            try {
+                const response = await fetch(url, {
+                    method: 'POST',
+                    body: JSON.stringify({ action: 'fetch_announcements' })
+                });
+                
+                const result = await response.json();
+                
+                if (result.status === 'success') {
+                    loading.style.display = 'none';
+                    if (result.data.length === 0) {
+                        feed.innerHTML = '<p>No announcements at this time.</p>';
+                        return;
+                    }
+                    
+                    // Display in reverse order (newest first) assuming sheet is appended top to bottom
+                    result.data.reverse().forEach(ann => {
+                        // Skip empty
+                        if(!ann.message) return;
+                        
+                        let dateStr = ann.date;
+                        try {
+                            const d = new Date(ann.date);
+                            if(!isNaN(d)) {
+                                dateStr = d.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric', hour: '2-digit', minute: '2-digit' });
+                            }
+                        } catch(e){}
+
+                        const card = document.createElement('div');
+                        card.className = 'announcement-card';
+                        card.innerHTML = `
+                            <div class="announcement-meta">
+                                <i class="fa-solid fa-user-circle"></i> Posted by <strong>${ann.author || 'Admin'}</strong> on ${dateStr}
+                            </div>
+                            <div class="announcement-text">${ann.message.replace(/\\n/g, '<br>')}</div>
+                        `;
+                        feed.appendChild(card);
+                    });
+                } else {
+                    loading.innerText = "Error: Could not load announcements.";
+                }
+            } catch (error) {
+                loading.innerText = "Network error. Please try again later.";
+            }
+        }
+    </script>
+</body>
+</html>
